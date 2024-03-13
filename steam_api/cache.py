@@ -32,6 +32,8 @@ class CacheFiles:
     def no_args_mode(self, value: bool) -> None:
         if value is False:
             self._path.mkdir(exist_ok=True, parents=True)
+        elif value is True:
+            self._path.parent.mkdir(exist_ok=True, parents=True)
         self._no_args_mode = value
 
     def _key_file(self, key: str) -> Path:
@@ -70,10 +72,10 @@ class CacheDecorator:
 
     @staticmethod
     def _model_dump(data: BaseModel) -> AnyJson:
-        return data and data.dict(by_alias=True)
+        return data and data.model_dump(by_alias=True, exclude_unset=True)
 
     def _model_load(self, data: AnyJson) -> BaseModel | None:
-        return data and self.model.parse_obj(data)
+        return data and self.model.model_validate(data)
 
     def get_arg_count(self, func: F) -> int:
         spec = inspect.getfullargspec(func)

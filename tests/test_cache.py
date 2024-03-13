@@ -7,23 +7,30 @@ from steam_api.cache import Cache
 from tests.utils import TestDatum
 
 
-def allow_call_once(f):
-    called = [False]
+@pytest.fixture()
+def func_one_arg():
+    counter = [0]
 
-    def wrapper(*args, **kwargs):
-        if called[0]:
-            raise AssertionError('Called twice!')
-        called[0] = True
-        return f(*args, **kwargs)
+    def foo(arg: str):
+        name = 'a'
+        if counter[0]:
+            name = str(counter[0])
+        counter[0] += 1
+        return TestDatum(name=name, arg=arg)
 
-    return wrapper
+    return foo
 
 
 @pytest.fixture()
-def func_one_arg():
-    @allow_call_once
-    def foo(arg: str):
-        return TestDatum(name='a', arg=arg)
+def func_no_args():
+    counter = [0]
+
+    def foo():
+        name = 'a'
+        if counter[0]:
+            name = str(counter[0])
+        counter[0] += 1
+        return TestDatum(name=name)
 
     return foo
 
@@ -45,3 +52,11 @@ def test_cache(cacher, func_one_arg, cache_path):
     result = cached_foo('ARG')
     assert result == TestDatum(name='a', arg='ARG')
     assert (cache_path / 'subpath' / 'arg.yml').read_text() == 'arg: ARG\nname: a\n'
+
+
+def test_cache_singleton(func_no_args, cacher, cache_path):
+    cached_foo = cacher('subpath', key=None, model=TestDatum)(func_no_args)
+    cached_foo()
+    result = cached_foo()
+    assert result == TestDatum(name='a')
+    assert (cache_path / 'subpath.yml').read_text() == 'name: a\n'
