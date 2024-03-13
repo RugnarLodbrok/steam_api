@@ -10,5 +10,6 @@ __pycache__
 .coverage
 .mypy_cache
 
+data
 cache
 .env
