@@ -12,7 +12,7 @@ from steam_api.common import AnyDict, AnyJson
 class SerializerBase:
     @property
     @abc.abstractmethod
-    def EXT(self) -> str:
+    def EXT(self) -> str:  # pylint:disable=invalid-name
         ...
 
     @abc.abstractmethod

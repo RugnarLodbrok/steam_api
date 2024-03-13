@@ -16,11 +16,10 @@ class MyRate(BaseModel):
     path: str
 
     @classmethod
-    def load(cls, path: Path = ROOT/ 'data' / 'my_rate.yml') -> Self:
+    def load(cls, path: Path = ROOT / 'data' / 'my_rate.yml') -> Self:
         json = yaml.safe_load(path.read_text())
         json['path'] = str(path)
-        obj = cls.parse_obj(json)
-        return obj
+        return cls.parse_obj(json)
 
     def save(self):
         with open(self.path, 'wt') as f:
@@ -83,7 +82,7 @@ class Game:
 
 
 class AppNameMap:
-    def __init__(self):
+    def __init__(self) -> None:
         self._map = {}
 
     def __getitem__(self, item: str) -> int:

@@ -12,6 +12,7 @@ packages = [
 python = "^3.11"
 requests = "^2.28.2"
 pydantic = "^2.0.0"
+PyYaml = '^6'
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^2.0.0"
@@ -78,6 +79,12 @@ ignore = [
     "W503", # line break before binary operator
     "W504", # Line break occurred after a binary operator
     "PT011", # pytest.raises checks only exception type, without value matcher
+
+    "N802", # UPPERCASE abstract class constant
+    "C901", # function is too complex
+
+    "T001", # print found
+    "E800", # commented code
 ]
 max-complexity = 10
 max-annotations-complexity = 5
@@ -157,6 +164,10 @@ disable = [
     "W0707", # Consider explicitly re-raising using the 'from' keyword (raise-missing-from)
     "R0903", # Too few public methods (m/n) (too-few-public-methods)
     "C0113", # allow `not not` instead of `bool()`
+
+    "W1514", # open without encoding
+    "W0511", # todos
+    "W0223", # abstract-method
 ]
 max-module-lines = 300
 max-nested-blocks = 4

@@ -40,7 +40,7 @@ def download_reviews():
         if game.id in client.get_reviews.cache.cache_backend:
             continue
         for i, r in enumerate(client.get_reviews(game.id), start=1):
-            if not (i % 10):
+            if not i % 10:
                 print(f'\r{i}/{total_reviews}', end='')
         print('')
         if check_stop():

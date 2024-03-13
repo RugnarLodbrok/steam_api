@@ -21,6 +21,8 @@ CONN_TIMEOUT = 5
 READ_TIMEOUT = 10
 BACKOFF_TIMEOUT = 3
 
+TIMEOUT_TUPLE = (CONN_TIMEOUT, READ_TIMEOUT)
+
 
 class AppNotFound(Exception):
     pass
@@ -44,9 +46,12 @@ class Client:
     @cache('get_app_info', App)
     def get_app_info(self, app_id: int) -> App:
         # raise NotFound('disable fetch')
-        r = requests.get(f'{self.STORE_API}/api/appdetails?appids={app_id}')
-        r.raise_for_status()
-        raw = AppInfoResponse.parse_raw(r.text)
+        response = requests.get(
+            f'{self.STORE_API}/api/appdetails?appids={app_id}',
+            timeout=TIMEOUT_TUPLE,
+        )
+        response.raise_for_status()
+        raw = AppInfoResponse.parse_raw(response.text)
         assert set(raw.__root__) == {str(app_id)}
         outer = raw.__root__[str(app_id)]
         if not outer.success:
@@ -57,16 +62,17 @@ class Client:
 
     @cache('player_owned_games', OwnedGamesResponse)
     def get_player_owned_games(self, steam_id: int) -> OwnedGamesResponse:
-        r = requests.get(
+        response = requests.get(
             url=f'{self.STEAM_API}/IPlayerService/GetOwnedGames/v0001/',
             params={
                 'key': self.api_key,
                 'steamid': steam_id,
                 'format': 'json',
             },
+            timeout=TIMEOUT_TUPLE,
         )
-        r.raise_for_status()
-        return OwnedGamesResponse.parse_obj(r.json()['response'])
+        response.raise_for_status()
+        return OwnedGamesResponse.parse_obj(response.json()['response'])
 
     def get_total_reviews(self, app_id: int) -> int:
         return self.get_review_summary(app_id).total_reviews
@@ -94,31 +100,34 @@ class Client:
 
     @retry(ConnectTimeout, n=30, backoff_time=BACKOFF_TIMEOUT)
     def _get_reviews(self, app_id: int, cursor: str = '*') -> ReviewsResponse:
-        r = requests.get(
+        response = requests.get(
             f'{self.STORE_API}/appreviews/{app_id}',
             params={
                 'json': 1,
                 'language': 'all',
-                'filter': 'recent',  # this means ordering, not filter. Cursor won't work with default 'all'
+                # this means ordering, not filter. Cursor won't work with default 'all'
+                'filter': 'recent',
                 'review_type': 'all',
                 'appids': app_id,
                 'cursor': cursor,
                 'num_per_page': 100,
                 'filter_offtopic_activity': 0,
             },
-            timeout=(CONN_TIMEOUT, READ_TIMEOUT),
+            timeout=TIMEOUT_TUPLE,
         )
-        r.raise_for_status()
-        result = ReviewsResponse.parse_obj(r.json())
+        response.raise_for_status()
+        result = ReviewsResponse.parse_obj(response.json())
         assert result.success
         return result
 
     @cache('all_apps', key=None, serializer=SerializerJson())
     def get_all_apps(self) -> list[AnyDict]:
-        # todo: cache
-        r = requests.get(f'{self.STEAM_API}/ISteamApps/GetAppList/v2/')
-        r.raise_for_status()
-        return r.json()['applist']['apps']
+        response = requests.get(
+            f'{self.STEAM_API}/ISteamApps/GetAppList/v2/',
+            timeout=TIMEOUT_TUPLE,
+        )
+        response.raise_for_status()
+        return response.json()['applist']['apps']
 
 
 client = Client(config.STEAM_API_KEY)

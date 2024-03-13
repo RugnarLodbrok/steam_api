@@ -19,8 +19,7 @@ def retry(
                     last_exception = e
                     print(f'retry {exc_type}... {backoff_time} sec')
                     sleep(backoff_time)
-            else:
-                raise last_exception
+            raise last_exception
 
         return wrapper
 

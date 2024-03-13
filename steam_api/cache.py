@@ -4,10 +4,9 @@ from inspect import isgeneratorfunction as is_generator
 from pathlib import Path
 from typing import Callable, Iterator, Literal, ParamSpec, TypeVar
 
-from py_tools.seq import identity
 from pydantic import BaseModel
 
-from steam_api.common import AnyDict, AnyJson, ROOT
+from steam_api.common import ROOT, AnyDict, AnyJson, identity
 from steam_api.serializer import SerializerBase, SerializerYaml
 
 T = TypeVar('T', bound=BaseModel)
@@ -38,7 +37,7 @@ class CacheFiles:
     def _key_file(self, key: str) -> Path:
         if self._no_args_mode is False:
             return self._path / f'{key}.{self.ext}'
-        elif self._no_args_mode is True:
+        if self._no_args_mode is True:
             return Path(f'{self._path}.{self.ext}')
         raise RuntimeError('mode is not set')
 
@@ -60,10 +59,10 @@ class CacheFiles:
 
 class CacheDecorator:
     def __init__(
-            self,
-            cache_backend: CacheFiles,
-            model: BaseModel | None,
-            key_function: Callable[..., str] | None,
+        self,
+        cache_backend: CacheFiles,
+        model: BaseModel | None,
+        key_function: Callable[..., str] | None,
     ):
         self.cache_backend = cache_backend
         self.model = model
@@ -138,11 +137,11 @@ class Cache:
         self.path = path
 
     def __call__(
-            self,
-            prefix: str,
-            key: Literal['all_attr', 'no_self', 'self_id'] | None = 'no_self',
-            model: BaseModel | None = None,
-            serializer: SerializerBase = SerializerYaml(),
+        self,
+        prefix: str,
+        key: Literal['all_attr', 'no_self', 'self_id'] | None = 'no_self',
+        model: BaseModel | None = None,
+        serializer: SerializerBase = SerializerYaml(),
     ) -> CacheDecorator:
         cache_backend = CacheFiles(path=self.path / prefix, serializer=serializer)
         return CacheDecorator(
