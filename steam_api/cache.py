@@ -2,7 +2,7 @@ import inspect
 from functools import cached_property
 from inspect import isgeneratorfunction as is_generator
 from pathlib import Path
-from typing import Callable, Iterator, Literal, ParamSpec, TypeVar
+from typing import Callable, Iterator, Literal, ParamSpec, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -139,8 +139,8 @@ class Cache:
     def __call__(
         self,
         prefix: str,
-        key: Literal['all_attr', 'no_self', 'self_id'] | None = 'no_self',
-        model: BaseModel | None = None,
+        model: Type[BaseModel] | None = None,
+        key: Literal['all_str', 'no_self', 'self_id'] | None = 'no_self',
         serializer: SerializerBase = SerializerYaml(),
     ) -> CacheDecorator:
         cache_backend = CacheFiles(path=self.path / prefix, serializer=serializer)

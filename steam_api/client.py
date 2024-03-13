@@ -43,7 +43,7 @@ class Client:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    @cache('get_app_info', App)
+    @cache('get_app_info', model=App)
     def get_app_info(self, app_id: int) -> App:
         # raise NotFound('disable fetch')
         response = requests.get(
