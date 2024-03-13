@@ -4,6 +4,7 @@ from shutil import rmtree
 import pytest
 
 from steam_api.cache import Cache
+from steam_api.serializer import SerializerJson
 from tests.utils import TestDatum
 
 
@@ -96,11 +97,13 @@ def test_cache(cacher, func_one_arg, cache_path):
 
 
 def test_cache_singleton(func_no_args, cacher, cache_path):
-    cached_foo = cacher('prefix', key=None, model=TestDatum)(func_no_args)
+    cached_foo = cacher(
+        'prefix', key=None, model=TestDatum, serializer=SerializerJson()
+    )(func_no_args)
     cached_foo()
     result = cached_foo()
     assert result == TestDatum(name='a')
-    assert (cache_path / 'prefix.yml').read_text() == 'name: a\n'
+    assert (cache_path / 'prefix.json').read_text() == '{"name": "a"}'
 
 
 def test_cache_method(cached_method, cache_path):

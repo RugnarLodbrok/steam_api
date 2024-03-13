@@ -1,4 +1,3 @@
-import inspect
 from functools import cached_property
 from inspect import isgeneratorfunction as is_generator
 from pathlib import Path
@@ -22,7 +21,7 @@ class CacheFiles:
 
     @property
     def no_args_mode(self) -> bool:
-        return self._no_args_mode
+        return self._no_args_mode  # pragma: no cover
 
     @cached_property
     def ext(self):
@@ -34,6 +33,8 @@ class CacheFiles:
             self._path.mkdir(exist_ok=True, parents=True)
         elif value is True:
             self._path.parent.mkdir(exist_ok=True, parents=True)
+        else:
+            raise TypeError(value)  # pragma: no cover
         self._no_args_mode = value
 
     def _key_file(self, key: str) -> Path:
@@ -41,7 +42,7 @@ class CacheFiles:
             return self._path / f'{key}.{self.ext}'
         if self._no_args_mode is True:
             return Path(f'{self._path}.{self.ext}')
-        raise RuntimeError('mode is not set')
+        raise RuntimeError('mode is not set')  # pragma: no cover
 
     def __contains__(self, key: str) -> bool:
         return self._key_file(key).exists()
@@ -76,13 +77,6 @@ class CacheDecorator:
 
     def _model_load(self, data: AnyJson) -> BaseModel | None:
         return data and self.model.model_validate(data)
-
-    def get_arg_count(self, func: F) -> int:
-        spec = inspect.getfullargspec(func)
-        args = spec.args
-        if args[0] == 'self':
-            args = args[1:]
-        return len(args)
 
     def __call__(self, func: F) -> F:
         key_function = self.key_function
