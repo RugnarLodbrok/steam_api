@@ -5,7 +5,7 @@ from steam_api.config import config
 
 
 def handle_empty_game_info(app_id):
-    cache = client.get_app_info.cache.cache
+    cache = client.get_app_info.cache.cache_backend
     if not cache[app_id]:
         f: Path = cache._key_file(app_id)
         if f.exists():
@@ -45,20 +45,6 @@ def download_reviews():
         print('')
         if check_stop():
             break
-
-
-def main():
-    # games = Game.users_games(config.STEAM_MY_ID)
-    # games = sorted(games, key=lambda game: game.total_reviews)
-    # for g in games:
-    #     print(g.name, g.total_reviews)
-
-    # r: Review
-    # for r in client.get_reviews(643960):
-    #     print(r.id)
-
-    all_apps = client.get_all_apps()
-    print(len(all_apps))
 
 
 if __name__ == '__main__':

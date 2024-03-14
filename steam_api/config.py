@@ -1,4 +1,11 @@
-from pydantic import BaseSettings
+import dotenv
+from pydantic_settings import BaseSettings
+
+from steam_api.common import ROOT
+
+env_file = ROOT / '.env'
+if env_file.exists():
+    dotenv.load_dotenv(env_file)
 
 
 class Config(BaseSettings):

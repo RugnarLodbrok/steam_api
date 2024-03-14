@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class OwnedGame(BaseModel):
@@ -81,9 +81,9 @@ class App(BaseModel):
     capsule_image: str
     capsule_imagev5: str
     website: str | None = None
-    pc_requirements: dict
-    mac_requirements: dict
-    linux_requirements: dict
+    pc_requirements: dict | list
+    mac_requirements: dict | list
+    linux_requirements: dict | list
     developers: list[str] | None = None
     publishers: list[str]
     price_overview: AppPriceOverview | None = None
@@ -156,5 +156,5 @@ class AppInfoOuter(BaseModel):
     data: App | None = None
 
 
-class AppInfoResponse(BaseModel):
-    __root__: dict[str, AppInfoOuter]
+class AppInfoResponse(RootModel[dict[str, AppInfoOuter]]):
+    root: dict[str, AppInfoOuter]

@@ -52,8 +52,8 @@ class Client:
         )
         response.raise_for_status()
         raw = AppInfoResponse.parse_raw(response.text)
-        assert set(raw.__root__) == {str(app_id)}
-        outer = raw.__root__[str(app_id)]
+        assert set(raw.root) == {str(app_id)}
+        outer = raw.root[str(app_id)]
         if not outer.success:
             raise NotFound(f'app {app_id} retrieve failed')
         if not outer.data:
