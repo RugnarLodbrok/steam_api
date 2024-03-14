@@ -4,7 +4,7 @@ from typing import Callable, Iterator, Literal, ParamSpec, Type, TypeVar
 
 from pydantic import BaseModel
 
-from steam_api.cache.backends import CacheFiles
+from steam_api.cache.backends import CacheBackend, CacheFiles
 from steam_api.cache.serializers import SerializerBase, SerializerYaml
 from steam_api.common import ROOT, AnyJson, identity
 
@@ -16,7 +16,7 @@ F = Callable[P, T | None]
 class CacheDecorator:
     def __init__(
         self,
-        cache_backend: CacheFiles,
+        cache_backend: CacheBackend,
         model: BaseModel | None,
         key_function: Callable[..., str] | None,
     ):
@@ -91,10 +91,12 @@ class Cache:
         model: Type[BaseModel] | None = None,
         key: Literal['all_str', 'no_self', 'self_id'] | None = 'no_self',
         serializer: SerializerBase = SerializerYaml(),
+        cache_backend: Type[CacheBackend] = CacheFiles,
     ) -> CacheDecorator:
-        cache_backend = CacheFiles(path=self.path / prefix, serializer=serializer)
         return CacheDecorator(
-            cache_backend, model, key_function=self.KEY_FUNCTIONS[key]
+            cache_backend(path=self.path / prefix, serializer=serializer),
+            model,
+            key_function=self.KEY_FUNCTIONS[key],
         )
 
 

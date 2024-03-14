@@ -8,7 +8,7 @@ from steam_api.common import AnyDict, AnyJson
 
 
 class CacheBackend:
-    def __init__(self, path: Path, serializer: SerializerBase = SerializerYaml()):
+    def __init__(self, path: Path, serializer: SerializerBase):
         self._path = path
         self._no_args_mode: bool | None = None
         self._serializer = serializer
@@ -45,14 +45,31 @@ class CacheBackend:
 
 
 class CacheOneFile(CacheBackend):
+    def __init__(self, path: Path, serializer: SerializerBase):
+        super().__init__(path, serializer)
+        self._data: AnyDict | None = None
+        self._file = self._path.with_suffix('.' + self.ext)
+
+    @property
+    def data(self) -> AnyDict:
+        if self._data is None:
+            if self._file.exists():
+                self._data = self._serializer.load(self._file)
+            else:
+                self._file.parent.mkdir(exist_ok=True, parents=True)
+                self._data = {}
+
+        return self._data
+
     def __contains__(self, key: str) -> bool:
-        pass
+        return key in self.data
 
     def __getitem__(self, key: str) -> AnyJson:
-        pass
+        return self.data[key]
 
     def __setitem__(self, key: str, value: AnyJson) -> None:
-        pass
+        self.data[key] = value
+        self._serializer.dump(self._file, self.data)
 
 
 class CacheFiles(CacheBackend):

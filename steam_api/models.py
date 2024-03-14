@@ -109,7 +109,8 @@ class AppNameMap:
     def map(self):
         map = {}
         for game in Game.users_games(config.STEAM_MY_ID):
-            if game.name == 'NOT FOUND': continue
+            if game.name == 'NOT FOUND':
+                continue
             map[game.name] = game.id
         return map
 

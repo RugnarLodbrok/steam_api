@@ -4,6 +4,7 @@ from shutil import rmtree
 import pytest
 
 from steam_api.cache import Cache
+from steam_api.cache.backends import CacheOneFile
 from steam_api.cache.serializers import SerializerJson, SerializerYaml
 from tests.utils import TestDatum
 
@@ -101,19 +102,21 @@ def empty_yml(cache_path):
 
 
 def test_cache(cacher, func_one_arg, cache_path):
-    cached_foo = cacher('prefix', key='all_str', model=TestDatum)(func_one_arg)
-    cached_foo('ARG')
-    result = cached_foo('ARG')
-    assert result == TestDatum(name='a', arg='ARG')
+    @cacher('prefix', key='all_str', model=TestDatum)
+    def foo(arg):
+        return func_one_arg(arg)
+
+    assert foo('ARG') == foo('ARG') == TestDatum(name='a', arg='ARG')
     assert (cache_path / 'prefix' / 'arg.yml').read_text() == 'arg: ARG\nname: a\n'
 
 
 def test_cache_singleton(func_no_args, cacher, cache_path):
-    cached_foo = cacher(
-        'prefix', key=None, model=TestDatum, serializer=SerializerJson()
-    )(func_no_args)
-    cached_foo()
-    result = cached_foo()
+    @cacher('prefix', key=None, model=TestDatum, serializer=SerializerJson())
+    def foo():
+        return func_no_args()
+
+    foo()
+    result = foo()
     assert result == TestDatum(name='a')
     assert (cache_path / 'prefix.json').read_text() == '{"name": "a"}'
 
@@ -165,3 +168,26 @@ def test_key_self_id(cached_method_id_key, cache_path):
 
 def test_iter_empty_yaml(empty_yml):
     assert list(SerializerYaml()._yaml_chunks(empty_yml)) == []
+
+
+def test_cache_one_file(func_one_arg, cacher, cache_path):
+    @cacher('prefix', TestDatum, 'all_str', cache_backend=CacheOneFile)
+    def foo(*args):
+        return func_one_arg(*args)
+
+    foo('b')
+    assert (cache_path / 'prefix.yml').read_text() == 'b:\n  arg: b\n  name: a\n'
+    foo('c')
+    assert (cache_path / 'prefix.yml').read_text() == (
+        "b:\n  arg: b\n  name: a\n"
+        "c:\n  arg: c\n  name: '1'\n"
+    )
+
+    assert foo('b') == TestDatum(name='a', arg='b')
+    assert foo('c') == TestDatum(name='1', arg='c')
+
+    @cacher('prefix', TestDatum, 'all_str', cache_backend=CacheOneFile)
+    def foo(*args):
+        return func_one_arg(*args)
+
+    assert foo('b') == TestDatum(name='a', arg='b')
