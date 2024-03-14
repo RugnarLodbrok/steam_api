@@ -1,3 +1,4 @@
+import abc
 from functools import cached_property
 from pathlib import Path
 from typing import Callable, Iterator
@@ -6,19 +7,19 @@ from steam_api.cache.serializers import SerializerBase, SerializerYaml
 from steam_api.common import AnyDict, AnyJson
 
 
-class CacheFiles:
+class CacheBackend:
     def __init__(self, path: Path, serializer: SerializerBase = SerializerYaml()):
         self._path = path
         self._no_args_mode: bool | None = None
         self._serializer = serializer
 
-    @property
-    def no_args_mode(self) -> bool:
-        return self._no_args_mode  # pragma: no cover
-
     @cached_property
     def ext(self):
         return self._serializer.EXT
+
+    @property
+    def no_args_mode(self) -> bool:
+        return self._no_args_mode  # pragma: no cover
 
     @no_args_mode.setter
     def no_args_mode(self, value: bool) -> None:
@@ -30,6 +31,31 @@ class CacheFiles:
             raise TypeError(value)  # pragma: no cover
         self._no_args_mode = value
 
+    @abc.abstractmethod
+    def __contains__(self, key: str) -> bool:
+        ...
+
+    @abc.abstractmethod
+    def __getitem__(self, key: str) -> AnyJson:
+        ...
+
+    @abc.abstractmethod
+    def __setitem__(self, key: str, value: AnyJson) -> None:
+        ...
+
+
+class CacheOneFile(CacheBackend):
+    def __contains__(self, key: str) -> bool:
+        pass
+
+    def __getitem__(self, key: str) -> AnyJson:
+        pass
+
+    def __setitem__(self, key: str, value: AnyJson) -> None:
+        pass
+
+
+class CacheFiles(CacheBackend):
     def _key_file(self, key: str) -> Path:
         if self._no_args_mode is False:
             return self._path / f'{key}.{self.ext}'

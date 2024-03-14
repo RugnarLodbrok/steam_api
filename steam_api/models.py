@@ -5,8 +5,10 @@ from typing import Iterator, Self
 import yaml
 from pydantic import BaseModel
 
+from steam_api.cache import cache
 from steam_api.client import NotFound, client
 from steam_api.common import ROOT
+from steam_api.config import config
 from steam_api.schemas import App, OwnedGame, Review, ReviewsSummary
 
 
@@ -82,14 +84,15 @@ class Game:
 
 
 class AppNameMap:
-    def __init__(self) -> None:
+    def __init__(self, correction_file: Path) -> None:
         self._map = {}
+        self._correction_file = correction_file
 
     def __getitem__(self, item: str) -> int:
         return self.map[item]
 
     @property
-    def map(self):
+    def map_(self):
         if not self._map:
             all_apps = client.get_all_apps()
             _map = self._map
@@ -97,8 +100,23 @@ class AppNameMap:
                 app_id = item['appid']
                 name = item['name']
                 _map[name] = app_id
+            correction = yaml.safe_load(self._correction_file.read_text())
+            _map.update(correction)
         return self._map
 
+    @property
+    @cache('game_name_id_map', model=None, key=None)
+    def map(self):
+        map = {}
+        for game in Game.users_games(config.STEAM_MY_ID):
+            if game.name == 'NOT FOUND': continue
+            map[game.name] = game.id
+        return map
 
-app_name_map = AppNameMap()
+    @cached_property
+    def metrics(self):
+        pass
+
+
+app_name_map = AppNameMap(correction_file=ROOT / 'data/name_to_id_correction.yml')
 my_rate = MyRate.load()

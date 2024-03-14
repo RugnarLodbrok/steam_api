@@ -33,6 +33,7 @@ class AppPriceOverview(BaseModel):
         'GBP',
         'HKD',
         'COP',
+        'NZD',
     ]
     initial: int
     final: int
@@ -111,6 +112,10 @@ class ReviewsSummary(BaseModel):
     total_positive: int | None = None
     total_negative: int | None = None
     total_reviews: int | None = None
+
+    @property
+    def rate(self):
+        return self.total_reviews and self.total_positive / self.total_reviews
 
 
 class ReviewAuthor(BaseModel):

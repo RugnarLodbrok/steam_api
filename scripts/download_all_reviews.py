@@ -1,17 +1,8 @@
 from pathlib import Path
 
+from scripts.common import handle_empty_game_info
 from steam_api.client import NotFound, client
 from steam_api.config import config
-
-
-def handle_empty_game_info(app_id):
-    cache = client.get_app_info.cache.cache_backend
-    if not cache[app_id]:
-        f: Path = cache._key_file(app_id)
-        if f.exists():
-            f.unlink()
-    else:
-        raise AssertionError(app_id)
 
 
 def check_stop() -> bool:
