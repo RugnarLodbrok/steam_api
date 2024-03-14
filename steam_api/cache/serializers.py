@@ -68,13 +68,16 @@ class SerializerYaml(SerializerBase):
 
     @staticmethod
     def _yaml_chunks(path: Path) -> Iterator[str]:
-        chunk = ''
         with open(path, 'rt') as f:
-            for line in f:
-                if not chunk:
-                    assert line.startswith('- ')
-                    chunk = line
-                elif line.startswith('- '):
+            lines = iter(f)
+            try:
+                chunk = next(lines)
+                assert chunk.startswith('- ')
+            except StopIteration:
+                return
+
+            for line in lines:
+                if line.startswith('- '):
                     yield chunk
                     chunk = line
                 else:

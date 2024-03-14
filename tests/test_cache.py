@@ -4,7 +4,7 @@ from shutil import rmtree
 import pytest
 
 from steam_api.cache import Cache
-from steam_api.cache.serializers import SerializerJson
+from steam_api.cache.serializers import SerializerJson, SerializerYaml
 from tests.utils import TestDatum
 
 
@@ -91,6 +91,15 @@ def cacher(cache_path):
     rmtree(cache_path)
 
 
+@pytest.fixture()
+def empty_yml(cache_path):
+    cache_path.mkdir(parents=True)
+    path = cache_path / 'empty.yml'
+    path.write_text('')
+    yield path
+    rmtree(cache_path)
+
+
 def test_cache(cacher, func_one_arg, cache_path):
     cached_foo = cacher('prefix', key='all_str', model=TestDatum)(func_one_arg)
     cached_foo('ARG')
@@ -121,19 +130,19 @@ def test_cache_method(cached_method, cache_path):
 @pytest.mark.parametrize(
     ('arg', 'expected', 'yml'),
     [
-        # (
-        #     'arg',
-        #     [
-        #         TestDatum(name='0', arg='arg'),
-        #         TestDatum(name='1', arg='arg'),
-        #         TestDatum(name='2', arg='arg'),
-        #     ],
-        #     (
-        #         "- arg: arg\n  name: '0'\n"
-        #         "- arg: arg\n  name: '1'\n"
-        #         "- arg: arg\n  name: '2'\n"
-        #     ),
-        # ),
+        (
+            'arg',
+            [
+                TestDatum(name='0', arg='arg'),
+                TestDatum(name='1', arg='arg'),
+                TestDatum(name='2', arg='arg'),
+            ],
+            (
+                "- arg: arg\n  name: '0'\n"
+                "- arg: arg\n  name: '1'\n"
+                "- arg: arg\n  name: '2'\n"
+            ),
+        ),
         (
             '',
             [TestDatum(name='0'), TestDatum(name='1'), TestDatum(name='2')],
@@ -152,3 +161,7 @@ def test_key_self_id(cached_method_id_key, cache_path):
     result = cached_method_id_key()
     assert result == TestDatum(name='1')
     assert (cache_path / 'prefix' / 'some_id.yml').read_text() == "name: '1'\n"
+
+
+def test_iter_empty_yaml(empty_yml):
+    assert list(SerializerYaml()._yaml_chunks(empty_yml)) == []
