@@ -36,7 +36,7 @@ isort = { version = "^5", extras = ["pyproject"] }
 mypy = "^1.4.1"
 pep8-naming = "^0.11"
 pylint = "^2.4"
-pytest = "*"
+pytest = "^7"
 pytest-alembic = "^0.8.0"
 pytest-asyncio = "^0.18.3"
 pytest-cov = "^4.1.0"

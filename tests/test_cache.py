@@ -4,7 +4,7 @@ from shutil import rmtree
 import pytest
 
 from steam_api.cache import Cache
-from steam_api.serializer import SerializerJson
+from steam_api.cache.serializers import SerializerJson
 from tests.utils import TestDatum
 
 
@@ -43,7 +43,10 @@ def generator_func(cacher):
     @cacher('prefix', TestDatum, 'all_str')
     def foo(arg):
         for _ in range(3):
-            yield TestDatum(name=str(next(iterator)), arg=arg)
+            if arg:
+                yield TestDatum(name=str(next(iterator)), arg=arg)
+            else:
+                yield TestDatum(name=str(next(iterator)))
 
     return foo
 
@@ -115,16 +118,33 @@ def test_cache_method(cached_method, cache_path):
     assert (cache_path / 'prefix' / 'a_c.yml').read_text() == "arg: a@c\nname: '2'\n"
 
 
-def test_generator(generator_func, cache_path):
-    list(generator_func('arg'))
-    assert list(generator_func('arg')) == [
-        TestDatum(name='0', arg='arg'),
-        TestDatum(name='1', arg='arg'),
-        TestDatum(name='2', arg='arg'),
-    ]
-    assert (
-        cache_path / 'prefix' / 'arg.yml'
-    ).read_text() == "- arg: arg\n  name: '0'\n- arg: arg\n  name: '1'\n- arg: arg\n  name: '2'\n"
+@pytest.mark.parametrize(
+    ('arg', 'expected', 'yml'),
+    [
+        # (
+        #     'arg',
+        #     [
+        #         TestDatum(name='0', arg='arg'),
+        #         TestDatum(name='1', arg='arg'),
+        #         TestDatum(name='2', arg='arg'),
+        #     ],
+        #     (
+        #         "- arg: arg\n  name: '0'\n"
+        #         "- arg: arg\n  name: '1'\n"
+        #         "- arg: arg\n  name: '2'\n"
+        #     ),
+        # ),
+        (
+            '',
+            [TestDatum(name='0'), TestDatum(name='1'), TestDatum(name='2')],
+            "- name: '0'\n- name: '1'\n- name: '2'\n",
+        ),
+    ],
+)
+def test_generator(generator_func, cache_path, arg, expected, yml):
+    list(generator_func(arg))
+    assert list(generator_func(arg)) == expected
+    assert (cache_path / 'prefix' / f'{arg}.yml').read_text() == yml
 
 
 def test_key_self_id(cached_method_id_key, cache_path):

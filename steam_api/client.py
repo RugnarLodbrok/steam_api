@@ -4,6 +4,7 @@ import requests
 from requests import ConnectTimeout
 
 from steam_api.cache import cache
+from steam_api.cache.serializers import SerializerJson
 from steam_api.common import AnyDict
 from steam_api.config import config
 from steam_api.schemas import (
@@ -14,7 +15,6 @@ from steam_api.schemas import (
     ReviewsResponse,
     ReviewsSummary,
 )
-from steam_api.serializer import SerializerJson
 from steam_api.utils import retry
 
 CONN_TIMEOUT = 5
