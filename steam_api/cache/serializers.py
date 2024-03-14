@@ -82,5 +82,4 @@ class SerializerYaml(SerializerBase):
                     chunk = line
                 else:
                     chunk += line
-            if chunk:
-                yield chunk
+            yield chunk
