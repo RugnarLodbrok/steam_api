@@ -1,3 +1,4 @@
+from itertools import islice
 from pathlib import Path
 from shutil import rmtree
 
@@ -6,6 +7,7 @@ import pytest
 from steam_api.cache import Cache
 from steam_api.cache.backends import CacheOneFile
 from steam_api.cache.serializers import SerializerJson, SerializerYaml
+
 from tests.utils import TestDatum
 
 
@@ -43,11 +45,11 @@ def generator_func(cacher):
 
     @cacher('prefix', TestDatum, 'all_str')
     def foo(arg):
-        for _ in range(3):
+        for i in islice(iterator, 3):
             if arg:
-                yield TestDatum(name=str(next(iterator)), arg=arg)
+                yield TestDatum(name=str(i), arg=arg)
             else:
-                yield TestDatum(name=str(next(iterator)))
+                yield TestDatum(name=str(i))
 
     return foo
 
@@ -81,12 +83,12 @@ def cached_method_id_key(cacher):
     return A().foo
 
 
-@pytest.fixture
+@pytest.fixture()
 def cache_path() -> Path:
     return Path(__file__).parent / 'test_cache'
 
 
-@pytest.fixture
+@pytest.fixture()
 def cacher(cache_path):
     yield Cache(cache_path)
     rmtree(cache_path)
@@ -178,16 +180,15 @@ def test_cache_one_file(func_one_arg, cacher, cache_path):
     foo('b')
     assert (cache_path / 'prefix.yml').read_text() == 'b:\n  arg: b\n  name: a\n'
     foo('c')
-    assert (cache_path / 'prefix.yml').read_text() == (
-        "b:\n  arg: b\n  name: a\n"
-        "c:\n  arg: c\n  name: '1'\n"
-    )
+    assert (
+        cache_path / 'prefix.yml'
+    ).read_text() == "b:\n  arg: b\n  name: a\nc:\n  arg: c\n  name: '1'\n"
 
     assert foo('b') == TestDatum(name='a', arg='b')
     assert foo('c') == TestDatum(name='1', arg='c')
 
     @cacher('prefix', TestDatum, 'all_str', cache_backend=CacheOneFile)
-    def foo(*args):
+    def foo(*args):  # pylint:disable=function-redefined
         return func_one_arg(*args)
 
     assert foo('b') == TestDatum(name='a', arg='b')

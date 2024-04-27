@@ -85,7 +85,7 @@ class Cache:
     def __init__(self, path: Path):
         self.path = path
 
-    def __call__(
+    def __call__(  # pylint:disable=too-many-arguments
         self,
         prefix: str,
         model: Type[BaseModel] | None = None,

@@ -107,12 +107,12 @@ class AppNameMap:
     @property
     @cache('game_name_id_map', model=None, key=None)
     def map(self):
-        map = {}
+        map_ = {}
         for game in Game.users_games(config.STEAM_MY_ID):
             if game.name == 'NOT FOUND':
                 continue
-            map[game.name] = game.id
-        return map
+            map_[game.name] = game.id
+        return map_
 
     @cached_property
     def metrics(self):

@@ -3,7 +3,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable, Iterator
 
-from steam_api.cache.serializers import SerializerBase, SerializerYaml
+from steam_api.cache.serializers import SerializerBase
 from steam_api.common import AnyDict, AnyJson
 
 
